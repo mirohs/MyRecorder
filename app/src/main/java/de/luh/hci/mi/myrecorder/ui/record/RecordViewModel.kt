@@ -15,6 +15,7 @@ import de.luh.hci.mi.myrecorder.data.RecordingsRepository
 import de.luh.hci.mi.myrecorder.record.AudioRecorder
 import kotlinx.coroutines.launch
 import java.io.File
+import java.io.IOException
 import java.time.Duration
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -44,7 +45,7 @@ class RecordViewModel(
     var startDate by mutableStateOf("")
     var startTime by mutableStateOf("")
     private var startTimestamp: Long = 0
-    private lateinit var recordingFile: File
+    private var recordingFile: File? = null
 
     private var location: Location? = null
     var latitude: String by mutableStateOf("")
@@ -66,9 +67,10 @@ class RecordViewModel(
         startTimestamp = startDateTime.atZone(zoneId).toInstant().epochSecond
         log("$startDate, $startTime, $startDateTime, $zoneId, $startTimestamp")
 
-        recordingFile =
+        val file =
             recordingsRepository.recordingFile("$startTimestamp.${recorder.FILENAME_EXTENSION}")
-        recorder.start(recordingFile, 5 * 60 * 1000) { stopRecording() }
+        recordingFile = file
+        recorder.start(file, 5 * 60 * 1000) { stopRecording() }
         viewModelScope.launch {
             val loc = placesRepository.currentLocation()
             latitude = loc.latitude.toString()
@@ -81,25 +83,29 @@ class RecordViewModel(
     fun stopRecording() {
         log("stopRecording")
         recorder.stop()
-        val stopTime = LocalDateTime.now()
-        val duration = Duration.between(startDateTime, stopTime)
-        log("duration: $duration ${formatDuration(duration)}")
-        viewModelScope.launch {
-            log("stopRecording::launch")
-            recordingsRepository.addRecording(
-                Recording(
-                    timestamp = startTimestamp,
-                    startDate = startDateTime.format(dateFormatter),
-                    startTime = startDateTime.format(timeFormatter),
-                    duration = formatDuration(duration),
-                    file = recordingFile,
-                    latitude = location?.latitude?.toString() ?: "",
-                    longitude = location?.longitude?.toString() ?: "",
-                    place = place,
+        val file = recordingFile
+        recordingFile = null
+        if (file != null) {
+            val stopTime = LocalDateTime.now()
+            val duration = Duration.between(startDateTime, stopTime)
+            log("duration: $duration ${formatDuration(duration)}")
+            viewModelScope.launch {
+                log("stopRecording::launch")
+                recordingsRepository.addRecording(
+                    Recording(
+                        timestamp = startTimestamp,
+                        startDate = startDateTime.format(dateFormatter),
+                        startTime = startDateTime.format(timeFormatter),
+                        duration = formatDuration(duration),
+                        file = file,
+                        latitude = location?.latitude?.toString() ?: "",
+                        longitude = location?.longitude?.toString() ?: "",
+                        place = place,
+                    )
                 )
-            )
-            log("stopRecording::navigateBack")
-            navigateBack()
+                log("stopRecording::navigateBack")
+                navigateBack()
+            }
         }
     }
 
@@ -107,6 +113,15 @@ class RecordViewModel(
     override fun onCleared() {
         log("onCleared")
         recorder.stop()
+        // discard recording file if back button is pressed while recording
+        val file = recordingFile
+        if (file != null) {
+            try {
+                file.delete()
+            } catch (ex: IOException) {
+                log("onCleared: cannot delete recording file: $ex")
+            }
+        }
     }
 
     // Logs a debug message.
@@ -120,7 +135,12 @@ class RecordViewModel(
     ) : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             @Suppress("UNCHECKED_CAST")
-            return RecordViewModel(app.recordingsRepository, app.placesRepository, app.audioRecorder, navigateBack) as T
+            return RecordViewModel(
+                app.recordingsRepository,
+                app.placesRepository,
+                app.audioRecorder,
+                navigateBack
+            ) as T
         }
     }
 

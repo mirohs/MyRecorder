@@ -6,16 +6,11 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.initializer
-import androidx.lifecycle.viewmodel.viewModelFactory
-import androidx.navigation.toRoute
 import de.luh.hci.mi.myrecorder.MyRecorder
-import de.luh.hci.mi.myrecorder.PlayDestination
+import de.luh.hci.mi.myrecorder.PlayRoute
 import de.luh.hci.mi.myrecorder.data.Recording
 import de.luh.hci.mi.myrecorder.data.RecordingsRepository
 import de.luh.hci.mi.myrecorder.play.AudioPlayer
@@ -41,14 +36,13 @@ private fun formatPlaybackTime(positionMs: Int, durationMs: Int): String {
 }
 
 class PlayViewModel(
+    key: PlayRoute,
     repository: RecordingsRepository, // the underlying repository (data model)
     private val player: AudioPlayer,
     private val navigateBack: () -> Unit,
-    savedStateHandle: SavedStateHandle // a map that contains the it of the recording to play
 ) : ViewModel() {
 
-    // The recording ID is available in a key-value-map (savedStateHandle).
-    private val recordingId: Long = savedStateHandle.toRoute<PlayDestination>().recordingId
+    private val recordingId: Long = key.recordingId
 
     var recording: Recording? by mutableStateOf(null)
         private set
@@ -142,22 +136,19 @@ class PlayViewModel(
         Log.d(this.javaClass.simpleName, msg)
     }
 
-    companion object {
-        // Companion object for creating the view model in the right lifecycle scope.
-        fun factory(navigateBack: () -> Unit): ViewModelProvider.Factory {
-            return viewModelFactory {
-                initializer {
-                    val app =
-                        this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as MyRecorder
-                    val savedStateHandle = createSavedStateHandle()
-                    PlayViewModel(
-                        app.recordingsRepository,
-                        app.audioPlayer,
-                        navigateBack,
-                        savedStateHandle
-                    )
-                }
-            }
+    class Factory(
+        private val key: PlayRoute,
+        private val app: MyRecorder,
+        private val navigateBack: () -> Unit
+    ) : ViewModelProvider.Factory {
+        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+            @Suppress("UNCHECKED_CAST")
+            return PlayViewModel(
+                key,
+                app.recordingsRepository,
+                app.audioPlayer,
+                navigateBack,
+            ) as T
         }
     }
 

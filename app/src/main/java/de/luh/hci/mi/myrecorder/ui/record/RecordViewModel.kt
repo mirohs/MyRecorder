@@ -7,10 +7,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.initializer
-import androidx.lifecycle.viewmodel.viewModelFactory
 import de.luh.hci.mi.myrecorder.MyRecorder
 import de.luh.hci.mi.myrecorder.data.PlacesRepository
 import de.luh.hci.mi.myrecorder.data.Recording
@@ -56,6 +53,7 @@ class RecordViewModel(
     var place by mutableStateOf("")
 
     init {
+        log("init")
         startRecording()
     }
 
@@ -81,11 +79,13 @@ class RecordViewModel(
     }
 
     fun stopRecording() {
+        log("stopRecording")
         recorder.stop()
         val stopTime = LocalDateTime.now()
         val duration = Duration.between(startDateTime, stopTime)
         log("duration: $duration ${formatDuration(duration)}")
         viewModelScope.launch {
+            log("stopRecording::launch")
             recordingsRepository.addRecording(
                 Recording(
                     timestamp = startTimestamp,
@@ -98,6 +98,7 @@ class RecordViewModel(
                     place = place,
                 )
             )
+            log("stopRecording::navigateBack")
             navigateBack()
         }
     }
@@ -113,20 +114,13 @@ class RecordViewModel(
         Log.d(this.javaClass.simpleName, msg)
     }
 
-    companion object {
-        // Companion object for creating the view model in the right lifecycle scope.
-        fun factory(navigateBack: () -> Unit): ViewModelProvider.Factory {
-            return viewModelFactory {
-                initializer {
-                    val app = this[APPLICATION_KEY] as MyRecorder
-                    RecordViewModel(
-                        app.recordingsRepository,
-                        app.placesRepository,
-                        app.audioRecorder,
-                        navigateBack
-                    )
-                }
-            }
+    class Factory(
+        private val app: MyRecorder,
+        private val navigateBack: () -> Unit
+    ) : ViewModelProvider.Factory {
+        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+            @Suppress("UNCHECKED_CAST")
+            return RecordViewModel(app.recordingsRepository, app.placesRepository, app.audioRecorder, navigateBack) as T
         }
     }
 

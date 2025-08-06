@@ -55,6 +55,8 @@ fun RecordScreen(
     }
 }
 
+// Problem: Rotation change resets elapsed time
+// Problem: Rotation change prevents stop button to end recording
 @Composable
 fun ElapsedTime(fontSize: TextUnit = 32.sp) {
     var elapsedTime by remember { mutableStateOf("00:00") }

@@ -6,10 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.initializer
-import androidx.lifecycle.viewmodel.viewModelFactory
 import de.luh.hci.mi.myrecorder.LatLon
 import de.luh.hci.mi.myrecorder.MyRecorder
 import de.luh.hci.mi.myrecorder.data.MapPosition
@@ -107,13 +104,12 @@ class PlacesViewModel(
         Log.d(this.javaClass.simpleName, msg)
     }*/
 
-    companion object {
-        // Companion object for creating the view model in the right lifecycle scope.
-        val Factory: ViewModelProvider.Factory = viewModelFactory {
-            initializer {
-                val app = this[APPLICATION_KEY] as MyRecorder
-                PlacesViewModel(app.placesRepository)
-            }
+    class Factory(
+        private val app: MyRecorder,
+    ) : ViewModelProvider.Factory {
+        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+            @Suppress("UNCHECKED_CAST")
+            return PlacesViewModel(app.placesRepository) as T
         }
     }
 

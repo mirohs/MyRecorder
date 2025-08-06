@@ -2,9 +2,6 @@ package de.luh.hci.mi.myrecorder.ui.start
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
-import androidx.lifecycle.viewmodel.initializer
-import androidx.lifecycle.viewmodel.viewModelFactory
 import de.luh.hci.mi.myrecorder.MyRecorder
 import de.luh.hci.mi.myrecorder.data.PlacesRepository
 import de.luh.hci.mi.myrecorder.data.Recording
@@ -32,13 +29,12 @@ class StartViewModel(
         initialValue = 0)
      */
 
-    companion object {
-        // Companion object for creating the view model in the right lifecycle scope.
-        val Factory: ViewModelProvider.Factory = viewModelFactory {
-            initializer {
-                val app = this[APPLICATION_KEY] as MyRecorder
-                StartViewModel(app.recordingsRepository, app.placesRepository)
-            }
+    class Factory(
+        private val app: MyRecorder,
+    ) : ViewModelProvider.Factory {
+        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+            @Suppress("UNCHECKED_CAST")
+            return StartViewModel(app.recordingsRepository, app.placesRepository) as T
         }
     }
 

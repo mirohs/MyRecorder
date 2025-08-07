@@ -13,6 +13,8 @@ import de.luh.hci.mi.myrecorder.data.PlacesRepository
 import de.luh.hci.mi.myrecorder.data.Recording
 import de.luh.hci.mi.myrecorder.data.RecordingsRepository
 import de.luh.hci.mi.myrecorder.record.AudioRecorder
+import de.luh.hci.mi.myrecorder.ui.NavigateBack
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.IOException
@@ -36,8 +38,7 @@ private val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
 class RecordViewModel(
     private val recordingsRepository: RecordingsRepository,
     private val placesRepository: PlacesRepository,
-    private val recorder: AudioRecorder,
-    private val navigateBack: () -> Unit
+    private val recorder: AudioRecorder
 ) : ViewModel() {
 
     // Start time of the recording, which will be used to name the file.
@@ -46,6 +47,7 @@ class RecordViewModel(
     var startTime by mutableStateOf("")
     private var startTimestamp: Long = 0
     private var recordingFile: File? = null
+    var elapsedTime by mutableStateOf("00:00")
 
     private var location: Location? = null
     var latitude: String by mutableStateOf("")
@@ -78,6 +80,19 @@ class RecordViewModel(
             location = loc
             place = placesRepository.closestPlace(loc)?.name ?: ""
         }
+        viewModelScope.launch {
+            var min = 0
+            var sec = 0
+            while (recordingFile != null) {
+                delay(1000L)
+                sec++
+                if (sec >= 60) {
+                    min++
+                    sec = 0
+                }
+                elapsedTime = String.format(Locale.getDefault(), "%02d:%02d", min, sec)
+            }
+        }
     }
 
     fun stopRecording() {
@@ -104,10 +119,13 @@ class RecordViewModel(
                     )
                 )
                 log("stopRecording::navigateBack")
-                navigateBack()
+                navigateBack.trigger()
             }
         }
     }
+
+    private val navigateBack = NavigateBack(viewModelScope)
+    val navigateBackFlow = navigateBack.flow
 
     // Called when this ViewModel is no longer used and will be destroyed. Can be used for cleanup.
     override fun onCleared() {
@@ -129,17 +147,13 @@ class RecordViewModel(
         Log.d(this.javaClass.simpleName, msg)
     }
 
-    class Factory(
-        private val app: MyRecorder,
-        private val navigateBack: () -> Unit
-    ) : ViewModelProvider.Factory {
+    class Factory(private val app: MyRecorder) : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             @Suppress("UNCHECKED_CAST")
             return RecordViewModel(
                 app.recordingsRepository,
                 app.placesRepository,
-                app.audioRecorder,
-                navigateBack
+                app.audioRecorder
             ) as T
         }
     }

@@ -88,7 +88,10 @@ class MainActivity : ComponentActivity() {
     private fun Navigation() {
         val backStack = rememberNavBackStack(StartRoute)
         val app = application as MyRecorder
-        val back: () -> Unit = { backStack.removeLastOrNull() }
+        val back: () -> Unit = {
+            log("backStack: $backStack")
+            backStack.removeLastOrNull()
+        }
 
         NavDisplay(
             backStack = backStack,
@@ -109,12 +112,14 @@ class MainActivity : ComponentActivity() {
                 }
                 entry<RecordRoute> {
                     RecordScreen(
-                        viewModel(factory = RecordViewModel.Factory(app, back))
+                        back,
+                        viewModel(factory = RecordViewModel.Factory(app))
                     )
                 }
                 entry<PlayRoute> { key ->
                     PlayScreen(
-                        viewModel(factory = PlayViewModel.Factory(key, app, back))
+                        back,
+                        viewModel(factory = PlayViewModel.Factory(key, app))
                     )
                 }
                 entry<RecordingsRoute> {

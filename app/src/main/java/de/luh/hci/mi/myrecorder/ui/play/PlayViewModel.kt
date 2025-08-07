@@ -14,6 +14,7 @@ import de.luh.hci.mi.myrecorder.PlayRoute
 import de.luh.hci.mi.myrecorder.data.Recording
 import de.luh.hci.mi.myrecorder.data.RecordingsRepository
 import de.luh.hci.mi.myrecorder.play.AudioPlayer
+import de.luh.hci.mi.myrecorder.ui.NavigateBack
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.Locale
@@ -38,8 +39,7 @@ private fun formatPlaybackTime(positionMs: Int, durationMs: Int): String {
 class PlayViewModel(
     key: PlayRoute,
     repository: RecordingsRepository, // the underlying repository (data model)
-    private val player: AudioPlayer,
-    private val navigateBack: () -> Unit,
+    private val player: AudioPlayer
 ) : ViewModel() {
 
     private val recordingId: Long = key.recordingId
@@ -84,7 +84,7 @@ class PlayViewModel(
                 play()
             } else {
                 log("No recording found for id $recordingId")
-                navigateBack()
+                navigateBack.trigger()
             }
         }
     }
@@ -107,7 +107,7 @@ class PlayViewModel(
     fun stopPlaying() {
         player.stop()
         isPlaying = false
-        navigateBack()
+        navigateBack.trigger()
     }
 
     fun pausePlaying() {
@@ -121,8 +121,11 @@ class PlayViewModel(
 
     private fun onCompletion() {
         isPlaying = false
-        navigateBack()
+        navigateBack.trigger()
     }
+
+    private val navigateBack = NavigateBack(viewModelScope)
+    val navigateBackFlow = navigateBack.flow
 
     // Called when this ViewModel is no longer used and will be destroyed. Can be used for cleanup.
     override fun onCleared() {
@@ -138,16 +141,14 @@ class PlayViewModel(
 
     class Factory(
         private val key: PlayRoute,
-        private val app: MyRecorder,
-        private val navigateBack: () -> Unit
+        private val app: MyRecorder
     ) : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             @Suppress("UNCHECKED_CAST")
             return PlayViewModel(
                 key,
                 app.recordingsRepository,
-                app.audioPlayer,
-                navigateBack,
+                app.audioPlayer
             ) as T
         }
     }

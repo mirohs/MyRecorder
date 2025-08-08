@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 
-class NavigateBack(private val scope: CoroutineScope) {
+class UnitSignal(private val scope: CoroutineScope) {
     private val channel = Channel<Unit>(Channel.BUFFERED)
     val flow: Flow<Unit> = channel.receiveAsFlow()
     fun trigger() {

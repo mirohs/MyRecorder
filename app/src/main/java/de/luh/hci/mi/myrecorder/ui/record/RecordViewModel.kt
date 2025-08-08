@@ -13,7 +13,7 @@ import de.luh.hci.mi.myrecorder.data.PlacesRepository
 import de.luh.hci.mi.myrecorder.data.Recording
 import de.luh.hci.mi.myrecorder.data.RecordingsRepository
 import de.luh.hci.mi.myrecorder.record.AudioRecorder
-import de.luh.hci.mi.myrecorder.ui.NavigateBack
+import de.luh.hci.mi.myrecorder.ui.UnitSignal
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.File
@@ -124,7 +124,7 @@ class RecordViewModel(
         }
     }
 
-    private val navigateBack = NavigateBack(viewModelScope)
+    private val navigateBack = UnitSignal(viewModelScope)
     val navigateBackFlow = navigateBack.flow
 
     // Called when this ViewModel is no longer used and will be destroyed. Can be used for cleanup.

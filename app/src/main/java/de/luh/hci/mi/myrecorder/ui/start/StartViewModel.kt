@@ -29,9 +29,7 @@ class StartViewModel(
         initialValue = 0)
      */
 
-    class Factory(
-        private val app: MyRecorder,
-    ) : ViewModelProvider.Factory {
+    class Factory(private val app: MyRecorder) : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             @Suppress("UNCHECKED_CAST")
             return StartViewModel(app.recordingsRepository, app.placesRepository) as T

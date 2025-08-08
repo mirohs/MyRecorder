@@ -5,8 +5,6 @@ import android.media.MediaRecorder
 import android.os.Build
 import java.io.File
 
-// https://www.youtube.com/watch?v=4MJFmhcONfI
-
 class AudioRecorderImpl(
     private val context: Context,
 ) : AudioRecorder {

@@ -24,8 +24,8 @@ import de.luh.hci.mi.myrecorder.ui.IconButton
 
 @Composable
 fun PlayScreen(
-    navigateBack: () -> Unit,
-    viewModel: PlayViewModel
+    viewModel: PlayViewModel,
+    navigateBack: () -> Unit
 ) {
     LaunchedEffect(Unit) {
         viewModel.navigateBackFlow.collect {

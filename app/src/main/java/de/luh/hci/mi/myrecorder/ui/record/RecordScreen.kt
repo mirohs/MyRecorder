@@ -20,8 +20,8 @@ import de.luh.hci.mi.myrecorder.ui.IconButton
 
 @Composable
 fun RecordScreen(
-    navigateBack: () -> Unit,
-    viewModel: RecordViewModel
+    viewModel: RecordViewModel,
+    navigateBack: () -> Unit
 ) {
     LaunchedEffect(Unit) {
         viewModel.navigateBackFlow.collect {

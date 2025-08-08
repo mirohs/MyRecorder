@@ -92,6 +92,7 @@ class MainActivity : ComponentActivity() {
             log("backStack: $backStack")
             backStack.removeLastOrNull()
         }
+        val playRecording: (Long) -> Unit = { backStack.add(PlayRoute(it)) }
 
         NavDisplay(
             backStack = backStack,
@@ -103,29 +104,29 @@ class MainActivity : ComponentActivity() {
             entryProvider = entryProvider {
                 entry<StartRoute> {
                     StartScreen(
+                        viewModel(factory = StartViewModel.Factory(app)),
                         { backStack.add(RecordRoute) },
                         { backStack.add(PlayRoute(it)) },
                         { backStack.add(RecordingsRoute) },
-                        { backStack.add(PlacesRoute) },
-                        viewModel(factory = StartViewModel.Factory(app))
+                        { backStack.add(PlacesRoute) }
                     )
                 }
                 entry<RecordRoute> {
                     RecordScreen(
-                        back,
-                        viewModel(factory = RecordViewModel.Factory(app))
+                        viewModel(factory = RecordViewModel.Factory(app)),
+                        back
                     )
                 }
                 entry<PlayRoute> { key ->
                     PlayScreen(
-                        back,
-                        viewModel(factory = PlayViewModel.Factory(key, app))
+                        viewModel(factory = PlayViewModel.Factory(key, app)),
+                        back
                     )
                 }
                 entry<RecordingsRoute> {
                     RecordingsScreen(
-                        { backStack.add(PlayRoute(it)) },
-                        viewModel(factory = RecordingsViewModel.Factory(app))
+                        viewModel(factory = RecordingsViewModel.Factory(app)),
+                        playRecording
                     )
                 }
                 entry<PlacesRoute> {

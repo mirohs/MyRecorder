@@ -20,11 +20,11 @@ import de.luh.hci.mi.myrecorder.ui.IconButton
 
 @Composable
 fun StartScreen(
+    viewModel: StartViewModel,
     navigateToRecord: () -> Unit,
     navigateToPlay: (recordingId: Long) -> Unit,
     navigateToRecordings: () -> Unit,
-    navigateToPlaces: () -> Unit,
-    viewModel: StartViewModel
+    navigateToPlaces: () -> Unit
 ) {
     val latestRecording by viewModel.latestRecording.collectAsState(initial = null)
     val recordingsCount by viewModel.recordingsCount.collectAsState(initial = 0)

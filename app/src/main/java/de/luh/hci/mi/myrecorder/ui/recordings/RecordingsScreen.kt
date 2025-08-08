@@ -27,8 +27,8 @@ import de.luh.hci.mi.myrecorder.ui.IconButton
 
 @Composable
 fun RecordingsScreen(
-    navigateToPlay: (recordingId: Long) -> Unit,
-    viewModel: RecordingsViewModel
+    viewModel: RecordingsViewModel,
+    navigateToPlay: (recordingId: Long) -> Unit
 ) {
 
     val recordings by viewModel.recordings.collectAsState(initial = emptyList())
